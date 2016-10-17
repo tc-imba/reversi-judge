@@ -46,10 +46,22 @@ function handleBrainExit(id) {
 }
 
 async function main() {
+  let argvConfig;
+  if (argv.config) {
+    try {
+      argvConfig = JSON.parse((await fs.readFileSync(argv.config)).toString());
+    } catch (err) {
+      utils.log('error', { message: `Failed to parse config from "argv.config": ${err.message}` });
+      shutdown(exitCode.EXIT_ERROR);
+      return;
+    }
+  } else {
+    argvConfig = argv;
+  }
   for (const id of BRAIN_IDS) {
     brainsConfig[id] = {};
   }
-  brainsConfig[0].field = argv['brain0.field'];
+  brainsConfig[0].field = argvConfig['brain0.field'];
   if (brainsConfig[0].field !== 'black' && brainsConfig[0].field !== 'white') {
     utils.log('error', { message: `Invalid argument "brain0.field", expecting "black" or "white", but received ${brainsConfig[0].field}` });
     shutdown(exitCode.EXIT_ERROR);
@@ -60,7 +72,7 @@ async function main() {
   brainsConfig[1].field = Board.getOppositeField(brainsConfig[0].field);
 
   _.forEach(brainsConfig, (config, id) => {
-    config.bin = argv[`brain${id}.bin`];
+    config.bin = argvConfig[`brain${id}.bin`];
     if (config.bin === undefined) {
       utils.log('error', { message: `Missing argument "brain${id}.bin"` });
       shutdown(exitCode.EXIT_ERROR);
@@ -73,29 +85,29 @@ async function main() {
       shutdown(exitCode.EXIT_ERROR);
       return;
     }
-    config.moveTimeout = parseInt(argv[`brain${id}.moveTimeout`]);
+    config.moveTimeout = parseInt(argvConfig[`brain${id}.moveTimeout`]);
     if (isNaN(config.moveTimeout)) {
       config.moveTimeout = DEFAULT_MOVE_TIMEOUT;
     }
-    config.roundTimeout = parseInt(argv[`brain${id}.roundTimeout`]);
+    config.roundTimeout = parseInt(argvConfig[`brain${id}.roundTimeout`]);
     if (isNaN(config.roundTimeout)) {
       config.roundTimeout = DEFAULT_ROUND_TIMEOUT;
     }
-    config.memoryLimit = parseInt(argv[`brain${id}.memoryLimit`]);
+    config.memoryLimit = parseInt(argvConfig[`brain${id}.memoryLimit`]);
     if (isNaN(config.memoryLimit)) {
       config.memoryLimit = DEFAULT_MEMORY_LIMIT;
     }
   });
 
-  roundConfig.width = parseInt(argv['round.width']);
+  roundConfig.width = parseInt(argvConfig['round.width']);
   if (isNaN(roundConfig.width)) {
     roundConfig.width = DEFAULT_BOARD_WIDTH;
   }
-  roundConfig.height = parseInt(argv['round.height']);
+  roundConfig.height = parseInt(argvConfig['round.height']);
   if (isNaN(roundConfig.height)) {
     roundConfig.height = DEFAULT_BOARD_HEIGHT;
   }
-  roundConfig.winningStones = parseInt(argv['round.winningStones']);
+  roundConfig.winningStones = parseInt(argvConfig['round.winningStones']);
   if (isNaN(roundConfig.winningStones)) {
     roundConfig.winningStones = DEFAULT_WINNING_STONES;
   }
@@ -104,7 +116,7 @@ async function main() {
 
   const board = new Board(roundConfig.width, roundConfig.height, roundConfig.winningStones);
   try {
-    board.clearFromFile(argv.board);
+    board.clearFromFile(argvConfig.board);
   } catch (err) {
     utils.log('error', { message: `Unable to create board: ${err.message}` });
     shutdown(exitCode.EXIT_ERROR);
@@ -113,7 +125,7 @@ async function main() {
 
   // Spawn brain processes
   _.forEach(brainsConfig, (config, id) => {
-    const brain = new Brain(id, config.bin, argv.sandbox);
+    const brain = new Brain(id, config.bin, argvConfig.sandbox);
     brain.on('error', err => handleBrainError(id, err));
     brain.on('exit', code => handleBrainExit(id, code));
     brain.config = config;

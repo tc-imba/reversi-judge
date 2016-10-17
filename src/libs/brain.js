@@ -4,8 +4,8 @@ import byline from 'byline';
 import errors from './errors';
 import utils from './utils';
 
-const DEBUG_SINGLE_LIMIT = 128 * 1024 + 10;
-const DEBUG_SUM_LIMIT = 5 * 1024 * 1024;
+const DEBUG_SINGLE_LIMIT = 16 * 1024 + 10;
+const DEBUG_SUM_LIMIT = 256 * 1024;
 
 export default class Brain extends EventEmitter2 {
   constructor(id, brainBin, sandboxBin) {

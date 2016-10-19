@@ -20,6 +20,8 @@ export default class Brain extends EventEmitter2 {
     this.process.stdout.setEncoding('utf8');
     this.process.on('error', this.handleProcessError.bind(this));
     this.process.on('exit', this.handleProcessExit.bind(this));
+    this.process.stdin.on('error', this.handleProcessError.bind(this));
+    this.process.stdout.on('error', this.handleProcessError.bind(this));
 
     this.allowStdout = false;
     this.stdout = byline(this.process.stdout);

@@ -17,7 +17,7 @@ const DEFAULT_MOVE_TIMEOUT = 5000;
 const DEFAULT_ROUND_TIMEOUT = 180000;
 const DEFAULT_MEMORY_LIMIT = 350 * 1024 * 1024;
 
-const BRAIN_IDS = [0, 1];
+const BRAIN_IDS = ["0", "1"];
 
 const roundConfig = {};
 const brains = {};
@@ -49,7 +49,7 @@ async function main() {
   let argvConfig;
   if (argv.config) {
     try {
-      argvConfig = JSON.parse((await fs.readFileSync(argv.config)).toString());
+      argvConfig = JSON.parse((await fsp.readFile(argv.config)).toString());
     } catch (err) {
       utils.log('error', { message: `Failed to parse config from "argv.config": ${err.message}` });
       shutdown(exitCode.EXIT_ERROR);

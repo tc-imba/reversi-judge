@@ -39,4 +39,4 @@ jspm_packages
 .gulp-cache
 .dist
 
-*.sublime-workspace
+*.sublime-*

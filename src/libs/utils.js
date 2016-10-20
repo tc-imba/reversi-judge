@@ -6,12 +6,19 @@ utils.log = (type, data) => {
   console.log(JSON.stringify({ at: Date.now(), type, data }));
 };
 
-utils.spawnSandbox = (command, args, sandboxBin) => {
+utils.spawnSandbox = (command, args, sandboxBin, sandboxOptions) => {
   let spawnCommand, spawnArgs;
   if (sandboxBin) {
     spawnCommand = sandboxBin;
-    spawnArgs = [command, ...args];
-    // TODO: Prepend sandbox args
+    spawnArgs = [];
+    spawnArgs.push('--use-desktop');
+    spawnArgs.push('--use-logon');
+    spawnArgs.push('--active-process', 1);
+    spawnArgs.push('--memory', sandboxOptions.maxMemory);
+    if (sandboxOptions.affinity) {
+      spawnArgs.push('--affinity', 1 << (sandboxOptions.affinity - 1));
+    }
+    spawnArgs.push(command, ...args);
   } else {
     spawnCommand = command;
     spawnArgs = args;

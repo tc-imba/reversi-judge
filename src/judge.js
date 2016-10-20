@@ -14,7 +14,7 @@ const MSG_CAUSED_BY_SYS = 'Judge system internal error';
 
 const DEFAULT_BOARD_WIDTH = 20;
 const DEFAULT_BOARD_HEIGHT = 20;
-const DEFAULT_WINNING_STONES = 6;
+const DEFAULT_WINNING_STONES = 5;
 const DEFAULT_START_TIMEOUT = 5000;
 const DEFAULT_MOVE_TIMEOUT = 5000;
 const DEFAULT_ROUND_TIMEOUT = 180000;
@@ -99,6 +99,10 @@ async function main() {
       shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
       return;
     }
+    config.core = parseInt(argvConfig[`brain${id}.core`]);
+    if (isNaN(config.core)) {
+      config.core = false;
+    }
     config.moveTimeout = parseInt(argvConfig[`brain${id}.moveTimeout`]);
     if (isNaN(config.moveTimeout)) {
       config.moveTimeout = DEFAULT_MOVE_TIMEOUT;
@@ -139,7 +143,13 @@ async function main() {
 
   // Spawn brain processes
   _.forEach(brainsConfig, (config, id) => {
-    const brain = new Brain(id, config.bin, argvConfig.sandbox);
+    const brain = new Brain(id, {
+      bin: config.bin, 
+      sandbox: argvConfig.sandbox,
+      affinity: config.core,
+      maxMemory: config.memoryLimit,
+      maxTime: config.roundTimeout,  // TODO
+    });
     brain.on('error', err => handleBrainError(id, err));
     brain.on('exit', code => handleBrainExit(id, code));
     brain.config = config;

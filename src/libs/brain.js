@@ -8,15 +8,17 @@ const DEBUG_SINGLE_LIMIT = 16 * 1024 + 10;
 const DEBUG_SUM_LIMIT = 256 * 1024;
 
 export default class Brain extends EventEmitter2 {
-  constructor(id, brainBin, sandboxBin) {
+  constructor(id, options) {
     super();
-
     this.id = id;
     this.processExited = false;
     this.debugLogQuotaUsed = 0;
     this.ignoreAllEvents = false;
 
-    this.process = utils.spawnSandbox(brainBin, [], sandboxBin);
+    this.process = utils.spawnSandbox(options.bin, [], options.sandbox, {
+      affinity: options.affinity,
+      maxMemory: options.maxMemory,
+    });
     this.process.stdout.setEncoding('utf8');
     this.process.on('error', this.handleProcessError.bind(this));
     this.process.on('exit', this.handleProcessExit.bind(this));

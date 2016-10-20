@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import fs from 'fs';
 import fsp from 'fs-promise';
 import async from 'async';
 import { argv } from 'yargs';
@@ -8,6 +9,8 @@ import Brain from './libs/brain';
 import Board from './libs/board';
 import errors from './libs/errors';
 import exitCode from './libs/exitCode';
+
+const MSG_CAUSED_BY_SYS = 'Judge system internal error';
 
 const DEFAULT_BOARD_WIDTH = 20;
 const DEFAULT_BOARD_HEIGHT = 20;
@@ -23,36 +26,47 @@ const roundConfig = {};
 const brains = {};
 const brainsConfig = {};
 
+let board = null;
+let argvConfig = {};
 let hasShutdown = false;
 
-function shutdown(exitCode) {
-  utils.log('debug', { action: 'shutdown', exitCode });
+function shutdown(exitCode, causedBy) {
+  utils.log('debug', { action: 'shutdown', exitCode, causedBy });
   _.forEach(brains, brain => {
     brain.ignoreAllEvents = true;
     brain.kill();
   });
+  
+  if (argvConfig && argvConfig.summary) {
+    const summaryData = {
+      exitCausedBy: causedBy,
+      currentBoard: board ? board.board : null,
+      roundConfig,
+    };
+    fs.writeFileSync(argvConfig.summary, JSON.stringify(summaryData));
+  }
+
   hasShutdown = true;
   process.exit(exitCode);
 }
 
 function handleBrainError(id, err) {
   utils.log('info', { type: 'brainError', error: err.message, id });
-  shutdown(exitCode.getCodeForBrainLose(id));
+  shutdown(exitCode.getCodeForBrainLose(id), `Brain ${id} error: ${err.message}`);
 }
 
 function handleBrainExit(id) {
   utils.log('info', { type: 'brainProcessExit', id });
-  shutdown(exitCode.getCodeForBrainLose(id));
+  shutdown(exitCode.getCodeForBrainLose(id), `Brain ${id} process terminated`);
 }
 
 async function main() {
-  let argvConfig;
   if (argv.config) {
     try {
       argvConfig = JSON.parse((await fsp.readFile(argv.config)).toString());
     } catch (err) {
       utils.log('error', { message: `Failed to parse config from "argv.config": ${err.message}` });
-      shutdown(exitCode.EXIT_ERROR);
+      shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
       return;
     }
   } else {
@@ -64,7 +78,7 @@ async function main() {
   brainsConfig[0].field = argvConfig['brain0.field'];
   if (brainsConfig[0].field !== 'black' && brainsConfig[0].field !== 'white') {
     utils.log('error', { message: `Invalid argument "brain0.field", expecting "black" or "white", but received ${brainsConfig[0].field}` });
-    shutdown(exitCode.EXIT_ERROR);
+    shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
     return;
   }
   // translate text to constant
@@ -75,14 +89,14 @@ async function main() {
     config.bin = argvConfig[`brain${id}.bin`];
     if (config.bin === undefined) {
       utils.log('error', { message: `Missing argument "brain${id}.bin"` });
-      shutdown(exitCode.EXIT_ERROR);
+      shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
       return;
     }
     try {
       fsp.accessSync(config.bin, fsp.constants.X_OK);
     } catch (ignore) {
       utils.log('error', { message: `Unable to access "${brainsConfig[id].bin}"` });
-      shutdown(exitCode.EXIT_ERROR);
+      shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
       return;
     }
     config.moveTimeout = parseInt(argvConfig[`brain${id}.moveTimeout`]);
@@ -114,12 +128,12 @@ async function main() {
 
   utils.log('debug', { action: 'initialize', roundConfig: roundConfig, brainsConfig: brainsConfig });
 
-  const board = new Board(roundConfig.width, roundConfig.height, roundConfig.winningStones);
+  board = new Board(roundConfig.width, roundConfig.height, roundConfig.winningStones);
   try {
     board.clearFromFile(argvConfig.board);
   } catch (err) {
     utils.log('error', { message: `Unable to create board: ${err.message}` });
-    shutdown(exitCode.EXIT_ERROR);
+    shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
     return;
   }
 
@@ -212,7 +226,7 @@ async function main() {
   }
 
   _.forEach(brain => brain.ignoreAllEvents = true);
-  shutdown(code);
+  shutdown(code, '(normal round exit)');
 
   // TODO: match timeout and memory limit
 }
@@ -220,5 +234,5 @@ async function main() {
 main()
   .catch(e => {
     utils.log('error', { message: `Uncaught system exception: ${e.stack}` });
-    shutdown(exitCode.EXIT_ERROR);
+    shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
   });

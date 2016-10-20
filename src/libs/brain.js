@@ -63,7 +63,7 @@ export default class Brain extends EventEmitter2 {
       }
       const message = line.substr(6);
       this.debugLogQuotaUsed += message.length;
-      utils.log('info', { type: 'debug', id: this.id, message });
+      utils.log('debug', { type: 'brainDebug', id: this.id, message });
       return;
     }
     utils.log('debug', { action: 'receiveResponse', id: this.id, data: line });

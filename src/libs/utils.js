@@ -36,10 +36,14 @@ utils.terminateProcess = (child) => {
     child.stderr.destroy();
   }
   try {
-    child.kill('SIGKILL');
-    // On Windows, SIGKILL will call TerminateProcess:
-    // https://github.com/libuv/libuv/blob/1a96fe33343f82721ba8bc93adb5a67ddcf70ec4/src/win/process.c#L1169
+    if (process.platform === 'win32') {
+      // kill process tree
+      child_process.execSync(`taskkill /pid ${child.pid} /T /F`);
+    } else {
+      child.kill('SIGKILL');
+    }
   } catch (ignore) {
+    // ignore
   }
 };
 

@@ -155,7 +155,7 @@ export default class Board {
       for (const dir of [1, -1]) {
         x0 = x + dir * dx;
         y0 = y + dir * dy;
-        while (x0 >= 0 && x0 < this.width && y0 >= 0 && y0 < this.height && this.board[x0][y0] === field) {
+        while (x0 >= 0 && x0 < this.width && y0 >= 0 && y0 < this.height && this.board[y0][x0] === field) {
           count++;
           stones.push([x0, y0]);
           x0 += dir * dx;

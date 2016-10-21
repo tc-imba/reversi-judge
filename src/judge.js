@@ -95,7 +95,7 @@ async function main() {
     try {
       fsp.accessSync(config.bin, fsp.constants.X_OK);
     } catch (ignore) {
-      utils.log('error', { message: `Unable to access "${brainsConfig[id].bin}"` });
+      utils.log('error', { message: `Unable to access "${config.bin}"` });
       shutdown(exitCode.EXIT_ERROR, MSG_CAUSED_BY_SYS);
       return;
     }

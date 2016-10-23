@@ -36,11 +36,12 @@ function shutdown(exitCode, causedBy) {
     brain.ignoreAllEvents = true;
     brain.kill();
   });
-  
+
   if (argvConfig && argvConfig.summary) {
     const summaryData = {
       exitCausedBy: causedBy,
       currentBoard: board ? board.board : null,
+      boardOrder: board ? board.order : null,
       roundConfig,
     };
     fs.writeFileSync(argvConfig.summary, JSON.stringify(summaryData));
@@ -144,7 +145,7 @@ async function main() {
   // Spawn brain processes
   _.forEach(brainsConfig, (config, id) => {
     const brain = new Brain(id, {
-      bin: config.bin, 
+      bin: config.bin,
       sandbox: argvConfig.sandbox,
       affinity: config.core,
       maxMemory: config.memoryLimit,

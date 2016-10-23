@@ -53,6 +53,8 @@ export default class Board {
 
   clear() {
     this.board = _.map(new Array(this.height), row => _.fill(new Array(this.width), Board.FIELD_BLANK));
+    this.order = _.map(new Array(this.height), row => _.fill(new Array(this.width), 0));
+    this.currentOrder = 0;
     this.nextField = Board.FIELD_BLACK;
     this.state = Board.BOARD_STATE_GOING;
   }
@@ -117,6 +119,7 @@ export default class Board {
 
     const field = this.nextField;
     this.board[y][x] = field;
+    this.order[y][x] = ++this.currentOrder;
     this.nextField = Board.getOppositeField(field);
 
     utils.log('debug', { action: 'place', position: [x, y], field });

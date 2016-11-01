@@ -10,6 +10,7 @@
   "license": "MIT",
   "dependencies": {
     "async": "^2.0.1",
+    "babel-runtime": "^6.18.0",
     "bluebird": "^3.4.6",
     "byline": "^5.0.0",
     "es6-error": "^4.0.0",

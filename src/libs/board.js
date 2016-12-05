@@ -171,7 +171,7 @@ export default class Board {
     }
     for (const row of this.board) {
       for (const field of row) {
-        if (field !== Board.FIELD_BLANK) {
+        if (field === Board.FIELD_BLANK) {
           return [STATE_GOING];
         }
       }

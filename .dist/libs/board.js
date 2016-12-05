@@ -118,11 +118,10 @@ var Board = function () {
       }
       var fieldStat = (_fieldStat = {}, (0, _defineProperty3.default)(_fieldStat, Board.FIELD_BLACK, 0), (0, _defineProperty3.default)(_fieldStat, Board.FIELD_WHITE, 0), _fieldStat);
       places.forEach(function (place) {
-        var _place = (0, _slicedToArray3.default)(place, 3);
-
-        var x = _place[0];
-        var y = _place[1];
-        var field = _place[2];
+        var _place = (0, _slicedToArray3.default)(place, 3),
+            x = _place[0],
+            y = _place[1],
+            field = _place[2];
 
         if (x < 0 || x >= _this2.width || y < 0 || y >= _this2.height) {
           throw new _errors2.default.UserError('Invalid place at (' + x + ', ' + y + ')');
@@ -179,12 +178,10 @@ var Board = function () {
 
       var move = { x: x, y: y, ended: false };
 
-      var _getCurrentState = this.getCurrentState(x, y, field);
-
-      var _getCurrentState2 = (0, _slicedToArray3.default)(_getCurrentState, 2);
-
-      var state = _getCurrentState2[0];
-      var winningStones = _getCurrentState2[1];
+      var _getCurrentState = this.getCurrentState(x, y, field),
+          _getCurrentState2 = (0, _slicedToArray3.default)(_getCurrentState, 2),
+          state = _getCurrentState2[0],
+          winningStones = _getCurrentState2[1];
 
       if (state === STATE_WIN || state === STATE_DRAW) {
         move.ended = true;
@@ -218,10 +215,9 @@ var Board = function () {
 
       try {
         for (var _iterator = (0, _getIterator3.default)(derives), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = (0, _slicedToArray3.default)(_step.value, 2);
-
-          var dx = _step$value[0];
-          var dy = _step$value[1];
+          var _step$value = (0, _slicedToArray3.default)(_step.value, 2),
+              dx = _step$value[0],
+              dy = _step$value[1];
 
           var count = 1;
           var x0 = void 0,
@@ -273,7 +269,7 @@ var Board = function () {
             for (var _iterator3 = (0, _getIterator3.default)(row), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
               var _field = _step3.value;
 
-              if (_field !== Board.FIELD_BLANK) {
+              if (_field === Board.FIELD_BLANK) {
                 return [STATE_GOING];
               }
             }

@@ -15,6 +15,9 @@ export default class Brain extends EventEmitter2 {
     this.debugLogQuotaUsed = 0;
     this.ignoreAllEvents = false;
 
+    this.maxTime = options.maxTime;
+    this.usedTime = 0;
+
     this.process = utils.spawnSandbox(options.bin, [], options.sandbox, {
       affinity: options.affinity,
       maxMemory: options.maxMemory,
@@ -65,10 +68,10 @@ export default class Brain extends EventEmitter2 {
       }
       const message = line.substr(6);
       this.debugLogQuotaUsed += message.length;
-      utils.log('debug', { type: 'brainDebug', id: this.id, message });
+      utils.log('debug', { type: 'brainDebug', id: this.id, message, lastElapsed: this.usedTime });
       return;
     }
-    utils.log('debug', { action: 'receiveResponse', id: this.id, data: line });
+    utils.log('debug', { action: 'receiveResponse', id: this.id, data: line, lastElapsed: this.usedTime });
     if (!this.allowStdout) {
       this.emit('error', new errors.BrainError(this.id, `Not allowed to respond, but received "${line}".`));
       return;
@@ -77,7 +80,7 @@ export default class Brain extends EventEmitter2 {
   }
 
   writeInstruction(line) {
-    utils.log('debug', { action: 'sendRequest', id: this.id, data: line });
+    utils.log('debug', { action: 'sendRequest', id: this.id, data: line, lastElapsed: this.usedTime });
     this.process.stdin.write(`${line}\n`);
   }
 
@@ -100,13 +103,22 @@ export default class Brain extends EventEmitter2 {
   }
 
   waitForOneResponse(timeout = 0, afterThis = function () {}) {
-    let p = new Promise(resolve => {
+    let p = new Promise((resolve, reject) => {
       this.process.stdout.pause();
       this.allowStdout = true;
 
       afterThis();
+      const beginTime = Date.now();
 
       this.once('response', data => {
+        const endTime = Date.now();
+        if (endTime - beginTime > 0) {
+          this.usedTime += (endTime - beginTime);
+        }
+        if (this.usedTime > this.maxTime) {
+          reject(new errors.BrainError(this.id, `Round timeout. Total elapsed time ${this.usedTime}ms exceeded the round time limit ${this.maxTime}ms.`));
+          return;
+        }
         this.allowStdout = false;
         resolve(data);
       });

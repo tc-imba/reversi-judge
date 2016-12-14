@@ -39,11 +39,13 @@ function shutdown(exitCode, causedBy) {
 
   if (argvConfig && argvConfig.summary) {
     const summaryData = {
+      elapsedRoundTime: _.mapValues(brains, 'usedTime'),
       exitCausedBy: causedBy,
       currentBoard: board ? board.board : null,
       boardOrder: board ? board.order : null,
       roundConfig,
     };
+    utils.log('info', { action: 'summary', data: summaryData });
     fs.writeFileSync(argvConfig.summary, JSON.stringify(summaryData));
   }
 

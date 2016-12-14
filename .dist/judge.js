@@ -510,11 +510,13 @@ function shutdown(exitCode, causedBy) {
 
   if (argvConfig && argvConfig.summary) {
     var summaryData = {
+      elapsedRoundTime: _lodash2.default.mapValues(brains, 'usedTime'),
       exitCausedBy: causedBy,
       currentBoard: board ? board.board : null,
       boardOrder: board ? board.order : null,
       roundConfig: roundConfig
     };
+    _utils2.default.log('info', { action: 'summary', data: summaryData });
     _fs2.default.writeFileSync(argvConfig.summary, (0, _stringify2.default)(summaryData));
   }
 

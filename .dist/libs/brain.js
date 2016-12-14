@@ -68,6 +68,9 @@ var Brain = function (_EventEmitter) {
     _this.debugLogQuotaUsed = 0;
     _this.ignoreAllEvents = false;
 
+    _this.maxTime = options.maxTime;
+    _this.usedTime = 0;
+
     _this.process = _utils2.default.spawnSandbox(options.bin, [], options.sandbox, {
       affinity: options.affinity,
       maxMemory: options.maxMemory
@@ -124,10 +127,10 @@ var Brain = function (_EventEmitter) {
         }
         var message = line.substr(6);
         this.debugLogQuotaUsed += message.length;
-        _utils2.default.log('debug', { type: 'brainDebug', id: this.id, message: message });
+        _utils2.default.log('debug', { type: 'brainDebug', id: this.id, message: message, lastElapsed: this.usedTime });
         return;
       }
-      _utils2.default.log('debug', { action: 'receiveResponse', id: this.id, data: line });
+      _utils2.default.log('debug', { action: 'receiveResponse', id: this.id, data: line, lastElapsed: this.usedTime });
       if (!this.allowStdout) {
         this.emit('error', new _errors2.default.BrainError(this.id, 'Not allowed to respond, but received "' + line + '".'));
         return;
@@ -137,7 +140,7 @@ var Brain = function (_EventEmitter) {
   }, {
     key: 'writeInstruction',
     value: function writeInstruction(line) {
-      _utils2.default.log('debug', { action: 'sendRequest', id: this.id, data: line });
+      _utils2.default.log('debug', { action: 'sendRequest', id: this.id, data: line, lastElapsed: this.usedTime });
       this.process.stdin.write(line + '\n');
     }
   }, {
@@ -211,13 +214,22 @@ var Brain = function (_EventEmitter) {
       var timeout = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
       var afterThis = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : function () {};
 
-      var p = new _promise2.default(function (resolve) {
+      var p = new _promise2.default(function (resolve, reject) {
         _this2.process.stdout.pause();
         _this2.allowStdout = true;
 
         afterThis();
+        var beginTime = Date.now();
 
         _this2.once('response', function (data) {
+          var endTime = Date.now();
+          if (endTime - beginTime > 0) {
+            _this2.usedTime += endTime - beginTime;
+          }
+          if (_this2.usedTime > _this2.maxTime) {
+            reject(new _errors2.default.BrainError(_this2.id, 'Round timeout. Total elapsed time ' + _this2.usedTime + 'ms exceeded the round time limit ' + _this2.maxTime + 'ms.'));
+            return;
+          }
           _this2.allowStdout = false;
           resolve(data);
         });

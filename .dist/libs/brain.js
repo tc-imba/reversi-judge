@@ -53,7 +53,7 @@ var _utils2 = _interopRequireDefault(_utils);
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var DEBUG_SINGLE_LIMIT = 16 * 1024 + 10;
-var DEBUG_SUM_LIMIT = 256 * 1024;
+var DEBUG_SUM_LIMIT = 1 * 1024;
 
 var Brain = function (_EventEmitter) {
   (0, _inherits3.default)(Brain, _EventEmitter);
@@ -122,12 +122,12 @@ var Brain = function (_EventEmitter) {
         line = line.substr(0, DEBUG_SINGLE_LIMIT);
       }
       if (line.indexOf('DEBUG') === 0) {
-        if (this.debugLogQuotaUsed > this.DEBUG_SUM_LIMIT) {
+        if (this.debugLogQuotaUsed > DEBUG_SUM_LIMIT) {
           return;
         }
         var message = line.substr(6);
         this.debugLogQuotaUsed += message.length;
-        _utils2.default.log('debug', { type: 'brainDebug', id: this.id, message: message, lastElapsed: this.usedTime });
+        _utils2.default.log('debug', { type: 'brainDebug', id: this.id, message: message, lastElapsed: this.usedTime, quotaUsed: this.debugLogQuotaUsed });
         return;
       }
       _utils2.default.log('debug', { action: 'receiveResponse', id: this.id, data: line, lastElapsed: this.usedTime });

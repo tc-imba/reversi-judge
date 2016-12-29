@@ -5,7 +5,7 @@ import errors from './errors';
 import utils from './utils';
 
 const DEBUG_SINGLE_LIMIT = 16 * 1024 + 10;
-const DEBUG_SUM_LIMIT = 256 * 1024;
+const DEBUG_SUM_LIMIT = 1 * 1024;
 
 export default class Brain extends EventEmitter2 {
   constructor(id, options) {
@@ -63,12 +63,12 @@ export default class Brain extends EventEmitter2 {
       line = line.substr(0, DEBUG_SINGLE_LIMIT);
     }
     if (line.indexOf('DEBUG') === 0) {
-      if (this.debugLogQuotaUsed > this.DEBUG_SUM_LIMIT) {
+      if (this.debugLogQuotaUsed > DEBUG_SUM_LIMIT) {
         return;
       }
       const message = line.substr(6);
       this.debugLogQuotaUsed += message.length;
-      utils.log('debug', { type: 'brainDebug', id: this.id, message, lastElapsed: this.usedTime });
+      utils.log('debug', { type: 'brainDebug', id: this.id, message, lastElapsed: this.usedTime, quotaUsed: this.debugLogQuotaUsed });
       return;
     }
     utils.log('debug', { action: 'receiveResponse', id: this.id, data: line, lastElapsed: this.usedTime });

@@ -146,7 +146,7 @@ var Brain = function (_EventEmitter) {
   }, {
     key: 'emitErrorOnException',
     value: function () {
-      var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee(func) {
+      var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee(func) {
         var _len,
             args,
             _key,
@@ -200,7 +200,7 @@ var Brain = function (_EventEmitter) {
         }, _callee, this, [[0, 6]]);
       }));
 
-      function emitErrorOnException(_x, _x2) {
+      function emitErrorOnException(_x) {
         return _ref.apply(this, arguments);
       }
 

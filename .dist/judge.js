@@ -21,41 +21,41 @@ var _stringify = require('babel-runtime/core-js/json/stringify');
 var _stringify2 = _interopRequireDefault(_stringify);
 
 var main = function () {
-  var _ref = (0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee5() {
+  var _ref = (0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee4() {
     var _this = this;
 
-    var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, id, currentBrainId, lastMove, code;
+    var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, id, places, currentBrainId, lastMove, code;
 
-    return _regenerator2.default.wrap(function _callee5$(_context5) {
+    return _regenerator2.default.wrap(function _callee4$(_context4) {
       while (1) {
-        switch (_context5.prev = _context5.next) {
+        switch (_context4.prev = _context4.next) {
           case 0:
             if (!_yargs.argv.config) {
-              _context5.next = 16;
+              _context4.next = 16;
               break;
             }
 
-            _context5.prev = 1;
-            _context5.t0 = JSON;
-            _context5.next = 5;
+            _context4.prev = 1;
+            _context4.t0 = JSON;
+            _context4.next = 5;
             return _fsPromise2.default.readFile(_yargs.argv.config);
 
           case 5:
-            _context5.t1 = _context5.sent.toString();
-            argvConfig = _context5.t0.parse.call(_context5.t0, _context5.t1);
-            _context5.next = 14;
+            _context4.t1 = _context4.sent.toString();
+            argvConfig = _context4.t0.parse.call(_context4.t0, _context4.t1);
+            _context4.next = 14;
             break;
 
           case 9:
-            _context5.prev = 9;
-            _context5.t2 = _context5['catch'](1);
+            _context4.prev = 9;
+            _context4.t2 = _context4['catch'](1);
 
-            _utils2.default.log('error', { message: 'Failed to parse config from "argv.config": ' + _context5.t2.message });
+            _utils2.default.log('error', { message: 'Failed to parse config from "argv.config": ' + _context4.t2.message });
             shutdown(_exitCode2.default.EXIT_ERROR, MSG_CAUSED_BY_SYS);
-            return _context5.abrupt('return');
+            return _context4.abrupt('return');
 
           case 14:
-            _context5.next = 17;
+            _context4.next = 17;
             break;
 
           case 16:
@@ -65,57 +65,57 @@ var main = function () {
             _iteratorNormalCompletion = true;
             _didIteratorError = false;
             _iteratorError = undefined;
-            _context5.prev = 20;
+            _context4.prev = 20;
 
             for (_iterator = (0, _getIterator3.default)(BRAIN_IDS); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
               id = _step.value;
 
               brainsConfig[id] = {};
             }
-            _context5.next = 28;
+            _context4.next = 28;
             break;
 
           case 24:
-            _context5.prev = 24;
-            _context5.t3 = _context5['catch'](20);
+            _context4.prev = 24;
+            _context4.t3 = _context4['catch'](20);
             _didIteratorError = true;
-            _iteratorError = _context5.t3;
+            _iteratorError = _context4.t3;
 
           case 28:
-            _context5.prev = 28;
-            _context5.prev = 29;
+            _context4.prev = 28;
+            _context4.prev = 29;
 
             if (!_iteratorNormalCompletion && _iterator.return) {
               _iterator.return();
             }
 
           case 31:
-            _context5.prev = 31;
+            _context4.prev = 31;
 
             if (!_didIteratorError) {
-              _context5.next = 34;
+              _context4.next = 34;
               break;
             }
 
             throw _iteratorError;
 
           case 34:
-            return _context5.finish(31);
+            return _context4.finish(31);
 
           case 35:
-            return _context5.finish(28);
+            return _context4.finish(28);
 
           case 36:
             brainsConfig[0].field = argvConfig['brain0.field'];
 
             if (!(brainsConfig[0].field !== 'black' && brainsConfig[0].field !== 'white')) {
-              _context5.next = 41;
+              _context4.next = 41;
               break;
             }
 
             _utils2.default.log('error', { message: 'Invalid argument "brain0.field", expecting "black" or "white", but received ' + brainsConfig[0].field });
             shutdown(_exitCode2.default.EXIT_ERROR, MSG_CAUSED_BY_SYS);
-            return _context5.abrupt('return');
+            return _context4.abrupt('return');
 
           case 41:
             // translate text to constant
@@ -170,19 +170,19 @@ var main = function () {
             _utils2.default.log('debug', { action: 'initialize', roundConfig: roundConfig, brainsConfig: brainsConfig });
 
             board = new _board2.default(roundConfig.width, roundConfig.height, roundConfig.winningStones);
-            _context5.prev = 52;
+            _context4.prev = 52;
 
             board.clearFromFile(argvConfig.board);
-            _context5.next = 61;
+            _context4.next = 61;
             break;
 
           case 56:
-            _context5.prev = 56;
-            _context5.t4 = _context5['catch'](52);
+            _context4.prev = 56;
+            _context4.t4 = _context4['catch'](52);
 
-            _utils2.default.log('error', { message: 'Unable to create board: ' + _context5.t4.message });
+            _utils2.default.log('error', { message: 'Unable to create board: ' + _context4.t4.message });
             shutdown(_exitCode2.default.EXIT_ERROR, MSG_CAUSED_BY_SYS);
-            return _context5.abrupt('return');
+            return _context4.abrupt('return');
 
           case 61:
 
@@ -193,7 +193,8 @@ var main = function () {
                 sandbox: argvConfig.sandbox,
                 affinity: config.core,
                 maxMemory: config.memoryLimit,
-                maxTime: config.roundTimeout });
+                maxTime: config.roundTimeout // TODO
+              });
               brain.on('error', function (err) {
                 return handleBrainError(id, err);
               });
@@ -205,112 +206,98 @@ var main = function () {
             });
 
             if (!hasShutdown) {
-              _context5.next = 64;
+              _context4.next = 64;
               break;
             }
 
-            return _context5.abrupt('return');
+            return _context4.abrupt('return');
 
           case 64:
-            _context5.prev = 64;
-            return _context5.delegateYield(_regenerator2.default.mark(function _callee2() {
-              var places;
-              return _regenerator2.default.wrap(function _callee2$(_context2) {
-                while (1) {
-                  switch (_context2.prev = _context2.next) {
-                    case 0:
-                      places = board.getCurrentPlaces();
-                      _context2.next = 3;
-                      return _promise2.default.all(_lodash2.default.map(brains, function (brain) {
-                        return brain.emitErrorOnException((0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee() {
-                          var resp;
-                          return _regenerator2.default.wrap(function _callee$(_context) {
-                            while (1) {
-                              switch (_context.prev = _context.next) {
-                                case 0:
-                                  _context.next = 2;
-                                  return brain.waitForOneResponse(DEFAULT_START_TIMEOUT, function () {
-                                    brain.writeInstruction('START');
-                                    places.forEach(function (place) {
-                                      var field = place.field === brain.config.field ? 1 : 2;
-                                      brain.writeInstruction('PLACE ' + place.x + ' ' + place.y + ' ' + field);
-                                    });
-                                    brain.writeInstruction('DONE');
-                                  });
+            _context4.prev = 64;
+            places = board.getCurrentPlaces();
+            _context4.next = 68;
+            return _promise2.default.all(_lodash2.default.map(brains, function (brain) {
+              return brain.emitErrorOnException((0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee() {
+                var resp;
+                return _regenerator2.default.wrap(function _callee$(_context) {
+                  while (1) {
+                    switch (_context.prev = _context.next) {
+                      case 0:
+                        _context.next = 2;
+                        return brain.waitForOneResponse(DEFAULT_START_TIMEOUT, function () {
+                          brain.writeInstruction('START');
+                          places.forEach(function (place) {
+                            var field = place.field === brain.config.field ? 1 : 2;
+                            brain.writeInstruction('PLACE ' + place.x + ' ' + place.y + ' ' + field);
+                          });
+                          brain.writeInstruction('DONE');
+                        });
 
-                                case 2:
-                                  resp = _context.sent;
+                      case 2:
+                        resp = _context.sent;
 
-                                  if (!(resp !== 'OK')) {
-                                    _context.next = 5;
-                                    break;
-                                  }
+                        if (!(resp !== 'OK')) {
+                          _context.next = 5;
+                          break;
+                        }
 
-                                  throw new _errors2.default.UserError('Expect "OK", but received "' + resp + '"');
+                        throw new _errors2.default.UserError('Expect "OK", but received "' + resp + '"');
 
-                                case 5:
-                                case 'end':
-                                  return _context.stop();
-                              }
-                            }
-                          }, _callee, _this);
-                        })));
-                      }));
-
-                    case 3:
-                    case 'end':
-                      return _context2.stop();
+                      case 5:
+                      case 'end':
+                        return _context.stop();
+                    }
                   }
-                }
-              }, _callee2, _this);
-            })(), 't5', 66);
-
-          case 66:
-            _context5.next = 75;
-            break;
+                }, _callee, _this);
+              })));
+            }));
 
           case 68:
-            _context5.prev = 68;
-            _context5.t6 = _context5['catch'](64);
+            _context4.next = 77;
+            break;
 
-            if (!(_context5.t6 instanceof _errors2.default.UserError)) {
-              _context5.next = 74;
+          case 70:
+            _context4.prev = 70;
+            _context4.t5 = _context4['catch'](64);
+
+            if (!(_context4.t5 instanceof _errors2.default.UserError)) {
+              _context4.next = 76;
               break;
             }
 
-            return _context5.abrupt('return');
+            return _context4.abrupt('return');
 
-          case 74:
-            throw _context5.t6;
+          case 76:
+            throw _context4.t5;
 
-          case 75:
+          case 77:
 
             // Send BEGIN or TURN
             currentBrainId = brains[0].config.field === board.nextField ? 0 : 1;
             lastMove = null;
 
-          case 77:
+          case 79:
             if (!(!hasShutdown && (lastMove === null || lastMove.ended === false))) {
-              _context5.next = 91;
+              _context4.next = 93;
               break;
             }
 
-            _context5.prev = 78;
-            return _context5.delegateYield(_regenerator2.default.mark(function _callee4() {
+            _context4.prev = 80;
+            return _context4.delegateYield( /*#__PURE__*/_regenerator2.default.mark(function _callee3() {
               var brain;
-              return _regenerator2.default.wrap(function _callee4$(_context4) {
+              return _regenerator2.default.wrap(function _callee3$(_context3) {
                 while (1) {
-                  switch (_context4.prev = _context4.next) {
+                  switch (_context3.prev = _context3.next) {
                     case 0:
                       brain = brains[currentBrainId];
-                      _context4.next = 3;
-                      return brain.emitErrorOnException((0, _asyncToGenerator3.default)(_regenerator2.default.mark(function _callee3() {
+                      _context3.next = 3;
+                      return brain.emitErrorOnException((0, _asyncToGenerator3.default)( /*#__PURE__*/_regenerator2.default.mark(function _callee2() {
                         var resp, m, move;
-                        return _regenerator2.default.wrap(function _callee3$(_context3) {
+                        return _regenerator2.default.wrap(function _callee2$(_context2) {
                           while (1) {
-                            switch (_context3.prev = _context3.next) {
+                            switch (_context2.prev = _context2.next) {
                               case 0:
-                                _context3.next = 2;
+                                _context2.next = 2;
                                 return brain.waitForOneResponse(brain.config.moveTimeout, function () {
                                   if (lastMove === null) {
                                     brain.writeInstruction('BEGIN');
@@ -320,11 +307,11 @@ var main = function () {
                                 });
 
                               case 2:
-                                resp = _context3.sent;
+                                resp = _context2.sent;
                                 m = resp.match(/^(\d+) (\d+)$/);
 
                                 if (m) {
-                                  _context3.next = 6;
+                                  _context2.next = 6;
                                   break;
                                 }
 
@@ -338,59 +325,59 @@ var main = function () {
 
                               case 9:
                               case 'end':
-                                return _context3.stop();
+                                return _context2.stop();
                             }
                           }
-                        }, _callee3, _this);
+                        }, _callee2, _this);
                       })));
 
                     case 3:
                     case 'end':
-                      return _context4.stop();
+                      return _context3.stop();
                   }
                 }
-              }, _callee4, _this);
-            })(), 't7', 80);
-
-          case 80:
-            _context5.next = 89;
-            break;
+              }, _callee3, _this);
+            })(), 't6', 82);
 
           case 82:
-            _context5.prev = 82;
-            _context5.t8 = _context5['catch'](78);
+            _context4.next = 91;
+            break;
 
-            if (!(_context5.t8 instanceof _errors2.default.UserError)) {
-              _context5.next = 88;
+          case 84:
+            _context4.prev = 84;
+            _context4.t7 = _context4['catch'](80);
+
+            if (!(_context4.t7 instanceof _errors2.default.UserError)) {
+              _context4.next = 90;
               break;
             }
 
-            return _context5.abrupt('return');
+            return _context4.abrupt('return');
 
-          case 88:
-            throw _context5.t8;
-
-          case 89:
-            _context5.next = 77;
-            break;
+          case 90:
+            throw _context4.t7;
 
           case 91:
+            _context4.next = 79;
+            break;
+
+          case 93:
 
             // Round ended
             code = void 0;
 
             if (!(board.state === _board2.default.BOARD_STATE_DRAW)) {
-              _context5.next = 96;
+              _context4.next = 98;
               break;
             }
 
             code = _exitCode2.default.EXIT_DRAW;
-            _context5.next = 105;
+            _context4.next = 107;
             break;
 
-          case 96:
+          case 98:
             if (!(board.state === _board2.default.BOARD_STATE_WIN_BLACK)) {
-              _context5.next = 100;
+              _context4.next = 102;
               break;
             }
 
@@ -399,12 +386,12 @@ var main = function () {
             } else {
               code = _exitCode2.default.EXIT_B1_WIN;
             }
-            _context5.next = 105;
+            _context4.next = 107;
             break;
 
-          case 100:
+          case 102:
             if (!(board.state === _board2.default.BOARD_STATE_WIN_WHITE)) {
-              _context5.next = 104;
+              _context4.next = 106;
               break;
             }
 
@@ -413,13 +400,13 @@ var main = function () {
             } else {
               code = _exitCode2.default.EXIT_B1_WIN;
             }
-            _context5.next = 105;
+            _context4.next = 107;
             break;
 
-          case 104:
+          case 106:
             throw new Error('Invalid board state ' + board.state);
 
-          case 105:
+          case 107:
 
             _lodash2.default.forEach(function (brain) {
               return brain.ignoreAllEvents = true;
@@ -428,12 +415,12 @@ var main = function () {
 
             // TODO: match timeout and memory limit
 
-          case 107:
+          case 109:
           case 'end':
-            return _context5.stop();
+            return _context4.stop();
         }
       }
-    }, _callee5, this, [[1, 9], [20, 24, 28, 36], [29,, 31, 35], [52, 56], [64, 68], [78, 82]]);
+    }, _callee4, this, [[1, 9], [20, 24, 28, 36], [29,, 31, 35], [52, 56], [64, 70], [80, 84]]);
   }));
 
   return function main() {

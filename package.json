@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build": "gulp clean && gulp js",
+    "build": "node-gyp configure build && gulp clean && gulp js",
     "start": "node .dist/bootstrap.js"
   },
   "license": "MIT",
@@ -31,7 +31,8 @@
     "gulp-babel": "^6.1.2",
     "gulp-file-cache": "0.0.1",
     "gulp-plumber": "^1.1.0",
-    "gulp-sourcemaps": "^1.6.0"
+    "gulp-sourcemaps": "^1.6.0",
+    "node-gyp": "^3.6.2"
   },
   "babel": {
     "presets": [

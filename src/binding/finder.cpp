@@ -40,20 +40,7 @@ void AddStone(const FunctionCallbackInfo<Value> &args) {
         //cout << "white" << endl;
         result = finder.addStone(x, y, ForbiddenPointFinder::Stone::White);
     }
-    switch (result) {
-        case ForbiddenPointFinder::Result::BlackWin:
-            args.GetReturnValue().Set(String::NewFromUtf8(isolate, "blackwin"));
-            break;
-        case ForbiddenPointFinder::Result::WhiteWin:
-            args.GetReturnValue().Set(String::NewFromUtf8(isolate, "whitewin"));
-            break;
-        case ForbiddenPointFinder::Result::Forbidden:
-            args.GetReturnValue().Set(String::NewFromUtf8(isolate, "forbidden"));
-            break;
-        case ForbiddenPointFinder::Result::UNKNOWN:
-            args.GetReturnValue().Set(String::NewFromUtf8(isolate, "unknown"));
-            break;
-    }
+    args.GetReturnValue().Set(Integer::New(isolate, (int) result));
 }
 
 void init(Local<Object> exports) {

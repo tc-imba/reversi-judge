@@ -4,10 +4,6 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-var _getIterator2 = require('babel-runtime/core-js/get-iterator');
-
-var _getIterator3 = _interopRequireDefault(_getIterator2);
-
 var _slicedToArray2 = require('babel-runtime/helpers/slicedToArray');
 
 var _slicedToArray3 = _interopRequireDefault(_slicedToArray2);
@@ -44,13 +40,19 @@ var _utils = require('./utils');
 
 var _utils2 = _interopRequireDefault(_utils);
 
+var _forbiddenPointFinder = require('../../build/Release/forbidden-point-finder');
+
+var _forbiddenPointFinder2 = _interopRequireDefault(_forbiddenPointFinder);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var derives = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
-var STATE_GOING = 0;
-var STATE_WIN = 1;
-var STATE_DRAW = 2;
+var STATE_GOING = -1;
+var STATE_BLACK_WIN = 0;
+var STATE_WHITE_WIN = 1;
+var STATE_FORBIDDEN = 2;
+var STATE_DRAW = 3;
 
 var Board = function () {
   (0, _createClass3.default)(Board, null, [{
@@ -86,6 +88,7 @@ var Board = function () {
     this.height = height;
     this.nInRow = nInRow;
     this.clear();
+    _forbiddenPointFinder2.default.clear();
   }
 
   (0, _createClass3.default)(Board, [{
@@ -177,55 +180,40 @@ var Board = function () {
       _utils2.default.log('debug', { action: 'place', position: [x, y], field: field });
 
       var move = { x: x, y: y, ended: false };
+      //const [ state, winningStones ] = this.getCurrentState(x, y, field);
 
-      var _getCurrentState = this.getCurrentState(x, y, field),
-          _getCurrentState2 = (0, _slicedToArray3.default)(_getCurrentState, 2),
-          state = _getCurrentState2[0],
-          winningStones = _getCurrentState2[1];
+      var fieldStr = field === Board.FIELD_BLACK ? 'black' : 'white';
+      var state = _forbiddenPointFinder2.default.addStone(x, y, fieldStr);
 
-      if (state === STATE_WIN || state === STATE_DRAW) {
+      if (state === STATE_DRAW) {
         move.ended = true;
-        if (state === STATE_DRAW) {
-          this.state = Board.BOARD_STATE_DRAW;
-        } else {
-          if (field === Board.FIELD_BLACK) {
-            this.state = Board.BOARD_STATE_WIN_BLACK;
-          } else {
-            this.state = Board.BOARD_STATE_WIN_WHITE;
-          }
-        }
+        this.state = Board.BOARD_STATE_DRAW;
+      } else if (state === STATE_BLACK_WIN) {
+        move.ended = true;
+        this.state = Board.BOARD_STATE_WIN_BLACK;
+      } else if (state === STATE_WHITE_WIN || state === STATE_FORBIDDEN) {
+        move.ended = true;
+        this.state = Board.BOARD_STATE_WIN_WHITE;
       }
 
       if (move.ended) {
         var info = { action: 'roundEnd', board: this.board };
-        if (state === STATE_WIN) {
-          info.winningStones = winningStones;
-        }
+        // if (state === STATE_WIN) {
+        //   info.winningStones = winningStones;
+        // }
         _utils2.default.log('debug', info);
       }
 
       return move;
     }
-  }, {
-    key: 'getCurrentState',
-    value: function getCurrentState(x, y, field) {
-      var _iteratorNormalCompletion = true;
-      var _didIteratorError = false;
-      var _iteratorError = undefined;
 
-      try {
-        for (var _iterator = (0, _getIterator3.default)(derives), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-          var _step$value = (0, _slicedToArray3.default)(_step.value, 2),
-              dx = _step$value[0],
-              dy = _step$value[1];
-
-          var count = 1;
-          var x0 = void 0,
-              y0 = void 0;
-          var stones = [[x, y]];
-          var _arr = [1, -1];
-          for (var _i = 0; _i < _arr.length; _i++) {
-            var dir = _arr[_i];
+    /*
+      getCurrentState(x, y, field) {
+        for (const [dx, dy] of derives) {
+          let count = 1;
+          let x0, y0;
+          let stones = [[x, y]];
+          for (const dir of [1, -1]) {
             x0 = x + dir * dx;
             y0 = y + dir * dy;
             while (x0 >= 0 && x0 < this.width && y0 >= 0 && y0 < this.height && this.board[y0][x0] === field) {
@@ -239,72 +227,17 @@ var Board = function () {
             return [STATE_WIN, stones];
           }
         }
-      } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion && _iterator.return) {
-            _iterator.return();
-          }
-        } finally {
-          if (_didIteratorError) {
-            throw _iteratorError;
-          }
-        }
-      }
-
-      var _iteratorNormalCompletion2 = true;
-      var _didIteratorError2 = false;
-      var _iteratorError2 = undefined;
-
-      try {
-        for (var _iterator2 = (0, _getIterator3.default)(this.board), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-          var row = _step2.value;
-          var _iteratorNormalCompletion3 = true;
-          var _didIteratorError3 = false;
-          var _iteratorError3 = undefined;
-
-          try {
-            for (var _iterator3 = (0, _getIterator3.default)(row), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-              var _field = _step3.value;
-
-              if (_field === Board.FIELD_BLANK) {
-                return [STATE_GOING];
-              }
-            }
-          } catch (err) {
-            _didIteratorError3 = true;
-            _iteratorError3 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                _iterator3.return();
-              }
-            } finally {
-              if (_didIteratorError3) {
-                throw _iteratorError3;
-              }
+        for (const row of this.board) {
+          for (const field of row) {
+            if (field === Board.FIELD_BLANK) {
+              return [STATE_GOING];
             }
           }
         }
-      } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion2 && _iterator2.return) {
-            _iterator2.return();
-          }
-        } finally {
-          if (_didIteratorError2) {
-            throw _iteratorError2;
-          }
-        }
+        return [STATE_DRAW];
       }
+    */
 
-      return [STATE_DRAW];
-    }
   }]);
   return Board;
 }();

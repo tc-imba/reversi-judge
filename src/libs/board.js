@@ -4,12 +4,15 @@ import _ from 'lodash';
 
 import errors from './errors';
 import utils from './utils';
+import finder from '../../build/Release/forbidden-point-finder';
 
 const derives = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
-const STATE_GOING = 0;
-const STATE_WIN = 1;
-const STATE_DRAW = 2;
+const STATE_GOING = -1;
+const STATE_BLACK_WIN = 0;
+const STATE_WHITE_WIN = 1;
+const STATE_FORBIDDEN = 2;
+const STATE_DRAW = 3;
 
 export default class Board {
 
@@ -44,16 +47,19 @@ export default class Board {
     assert(width > 0);
     assert(height > 0);
     assert(nInRow > 1);
-    utils.log('debug', { action: 'createBoard', width, height, nInRow });
+    utils.log('debug', {action: 'createBoard', width, height, nInRow});
     this.width = width;
     this.height = height;
     this.nInRow = nInRow;
     this.clear();
+    finder.clear();
   }
 
   clear() {
-    this.board = _.map(new Array(this.height), row => _.fill(new Array(this.width), Board.FIELD_BLANK));
-    this.order = _.map(new Array(this.height), row => _.fill(new Array(this.width), 0));
+    this.board = _.map(new Array(this.height),
+      row => _.fill(new Array(this.width), Board.FIELD_BLANK));
+    this.order = _.map(new Array(this.height),
+      row => _.fill(new Array(this.width), 0));
     this.currentOrder = 0;
     this.nextField = Board.FIELD_BLACK;
     this.state = Board.BOARD_STATE_GOING;
@@ -87,12 +93,15 @@ export default class Board {
     });
     if (fieldStat[Board.FIELD_BLACK] === fieldStat[Board.FIELD_WHITE]) {
       this.nextField = Board.FIELD_BLACK;
-    } else if (fieldStat[Board.FIELD_BLACK] === fieldStat[Board.FIELD_WHITE] + 1) {
+    } else if (fieldStat[Board.FIELD_BLACK] === fieldStat[Board.FIELD_WHITE] +
+      1) {
       this.nextField = Board.FIELD_WHITE;
     } else {
-      throw new errors.UserError(`Invalid initial state, black = ${fieldStat[Board.FIELD_BLACK]}, white = ${fieldStat[Board.FIELD_WHITE]}.`);
+      throw new errors.UserError(
+        `Invalid initial state, black = ${fieldStat[Board.FIELD_BLACK]}, white = ${fieldStat[Board.FIELD_WHITE]}.`);
     }
-    utils.log('debug', { action: 'clearBoard', board: this.board, nextField: this.nextField });
+    utils.log('debug',
+      {action: 'clearBoard', board: this.board, nextField: this.nextField});
   }
 
   getCurrentPlaces() {
@@ -100,7 +109,7 @@ export default class Board {
     this.board.forEach((row, y) => {
       row.forEach((field, x) => {
         if (field !== Board.FIELD_BLANK) {
-          places.push({ x, y, field });
+          places.push({x, y, field});
         }
       });
     });
@@ -111,10 +120,12 @@ export default class Board {
     assert(this.state === Board.BOARD_STATE_GOING);
 
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
-      throw new errors.UserError(`Invalid move. Movement position out of board.`);
+      throw new errors.UserError(
+        `Invalid move. Movement position out of board.`);
     }
     if (this.board[y][x] !== Board.FIELD_BLANK) {
-      throw new errors.UserError(`Invalid move. There is already a stone at position (${x}, ${y}).`);
+      throw new errors.UserError(
+        `Invalid move. There is already a stone at position (${x}, ${y}).`);
     }
 
     const field = this.nextField;
@@ -122,61 +133,65 @@ export default class Board {
     this.order[y][x] = ++this.currentOrder;
     this.nextField = Board.getOppositeField(field);
 
-    utils.log('debug', { action: 'place', position: [x, y], field });
+    utils.log('debug', {action: 'place', position: [x, y], field});
 
-    const move = { x, y, ended: false };
-    const [ state, winningStones ] = this.getCurrentState(x, y, field);
-    if (state === STATE_WIN || state === STATE_DRAW) {
+    const move = {x, y, ended: false};
+    //const [ state, winningStones ] = this.getCurrentState(x, y, field);
+
+    const fieldStr = field === Board.FIELD_BLACK ? 'black' : 'white';
+    const state = finder.addStone(x, y, fieldStr);
+
+    if (state === STATE_DRAW) {
       move.ended = true;
-      if (state === STATE_DRAW) {
-        this.state = Board.BOARD_STATE_DRAW;
-      } else {
-        if (field === Board.FIELD_BLACK) {
-          this.state = Board.BOARD_STATE_WIN_BLACK;
-        } else {
-          this.state = Board.BOARD_STATE_WIN_WHITE;
-        }
-      }
+      this.state = Board.BOARD_STATE_DRAW;
+    } else if (state === STATE_BLACK_WIN) {
+      move.ended = true;
+      this.state = Board.BOARD_STATE_WIN_BLACK;
+    } else if (state === STATE_WHITE_WIN || state === STATE_FORBIDDEN) {
+      move.ended = true;
+      this.state = Board.BOARD_STATE_WIN_WHITE;
     }
 
     if (move.ended) {
-      const info = { action: 'roundEnd', board: this.board };
-      if (state === STATE_WIN) {
-        info.winningStones = winningStones;
-      }
+      const info = {action: 'roundEnd', board: this.board};
+      // if (state === STATE_WIN) {
+      //   info.winningStones = winningStones;
+      // }
       utils.log('debug', info);
     }
 
     return move;
   }
 
-  getCurrentState(x, y, field) {
-    for (const [dx, dy] of derives) {
-      let count = 1;
-      let x0, y0;
-      let stones = [[x, y]];
-      for (const dir of [1, -1]) {
-        x0 = x + dir * dx;
-        y0 = y + dir * dy;
-        while (x0 >= 0 && x0 < this.width && y0 >= 0 && y0 < this.height && this.board[y0][x0] === field) {
-          count++;
-          stones.push([x0, y0]);
-          x0 += dir * dx;
-          y0 += dir * dy;
+  /*
+    getCurrentState(x, y, field) {
+      for (const [dx, dy] of derives) {
+        let count = 1;
+        let x0, y0;
+        let stones = [[x, y]];
+        for (const dir of [1, -1]) {
+          x0 = x + dir * dx;
+          y0 = y + dir * dy;
+          while (x0 >= 0 && x0 < this.width && y0 >= 0 && y0 < this.height && this.board[y0][x0] === field) {
+            count++;
+            stones.push([x0, y0]);
+            x0 += dir * dx;
+            y0 += dir * dy;
+          }
+        }
+        if (count >= this.nInRow) {
+          return [STATE_WIN, stones];
         }
       }
-      if (count >= this.nInRow) {
-        return [STATE_WIN, stones];
-      }
-    }
-    for (const row of this.board) {
-      for (const field of row) {
-        if (field === Board.FIELD_BLANK) {
-          return [STATE_GOING];
+      for (const row of this.board) {
+        for (const field of row) {
+          if (field === Board.FIELD_BLANK) {
+            return [STATE_GOING];
+          }
         }
       }
+      return [STATE_DRAW];
     }
-    return [STATE_DRAW];
-  }
+  */
 
 }

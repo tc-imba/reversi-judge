@@ -21,7 +21,8 @@ public:
         BlackWin = 0,
         WhiteWin = 1,
         Forbidden = 2,
-        UNKNOWN = -1
+        Draw = 3,
+        Unknown = -1
     };
 
     int nForbiddenPoints = 0;
@@ -29,6 +30,7 @@ public:
 
 private:
     Stone cBoard[BoardSize + 2][BoardSize + 2];
+    int nStones = 0;
 
 public:
     ForbiddenPointFinder();

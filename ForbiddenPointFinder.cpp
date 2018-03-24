@@ -25,6 +25,7 @@ ForbiddenPointFinder::~ForbiddenPointFinder() {
 
 void ForbiddenPointFinder::clear() {
     nForbiddenPoints = 0;
+    nStones = 0;
 
     for (int i = 0; i < BoardSize + 2; i++) {
         cBoard[0][i] = Stone ::Wall;
@@ -39,7 +40,7 @@ void ForbiddenPointFinder::clear() {
 }
 
 ForbiddenPointFinder::Result ForbiddenPointFinder::addStone(int x, int y, Stone cStone) {
-    Result nResult = Result::UNKNOWN;
+    Result nResult = Result::Unknown;
 
     if (cStone == Stone::Black) {
         if (isFive(x, y, 0))
@@ -54,10 +55,16 @@ ForbiddenPointFinder::Result ForbiddenPointFinder::addStone(int x, int y, Stone 
     }
 
     cBoard[x + 1][y + 1] = cStone;
-    if (nResult == Result::UNKNOWN)
+    ++nStones;
+    
+    if (nResult == Result::Unknown) {
         findForbiddenPoints();
-    else
+    } else {
         nForbiddenPoints = 0;
+    }
+    if (nResult == Result::Unknown && nStones >= BoardSize * BoardSize) {
+        nResult = Result::Draw;
+    }
     return nResult;
 }
 

@@ -52,7 +52,6 @@ export default class Board {
     this.height = height;
     this.nInRow = nInRow;
     this.clear();
-    finder.clear();
   }
 
   clear() {
@@ -63,6 +62,7 @@ export default class Board {
     this.currentOrder = 0;
     this.nextField = Board.FIELD_BLACK;
     this.state = Board.BOARD_STATE_GOING;
+    finder.clear();
   }
 
   clearFromFile(file) {

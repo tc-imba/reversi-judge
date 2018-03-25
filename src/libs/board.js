@@ -90,6 +90,8 @@ export default class Board {
       }
       this.board[y][x] = field;
       fieldStat[field]++;
+      const fieldStr = field === Board.FIELD_BLACK ? 'black' : 'white';
+      finder.addStone(x, y, fieldStr);
     });
     if (fieldStat[Board.FIELD_BLACK] === fieldStat[Board.FIELD_WHITE]) {
       this.nextField = Board.FIELD_BLACK;

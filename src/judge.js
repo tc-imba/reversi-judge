@@ -171,7 +171,9 @@ async function main() {
         brain.writeInstruction('START');
         places.forEach(place => {
           const field = place.field === brain.config.field ? 1 : 2;
-          brain.writeInstruction(`PLACE ${place.x} ${place.y} ${field}`);
+          const col = String.fromCharCode(place.x + 'a'.charCodeAt(0));
+          const row = place.y + 1;
+          brain.writeInstruction(`PLACE ${col} ${row} ${field}`);
         });
         brain.writeInstruction('DONE');
       });
@@ -200,7 +202,9 @@ async function main() {
           } else if (lastMove.pass) {
             brain.writeInstruction('PASS');
           } else {
-            brain.writeInstruction(`TURN ${lastMove.x} ${lastMove.y}`);
+            const col = String.fromCharCode(lastMove.x + 'a'.charCodeAt(0));
+            const row = lastMove.y + 1;
+            brain.writeInstruction(`TURN ${col} ${row}`);
           }
         });
         let move;

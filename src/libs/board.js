@@ -126,6 +126,9 @@ export default class Board {
   }
 
   reverse(x, y, dir, field, action = false) {
+    if (this.board[y][x] !== Board.FIELD_BLANK) {
+      return 0;
+    }
     const oppField = Board.getOppositeField(field);
     let flag = false;
     let num = 0;
@@ -191,11 +194,11 @@ export default class Board {
   place(x, y, pass = false) {
     assert(this.state === Board.BOARD_STATE_GOING);
 
-    if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+    if (!pass && (x < 0 || x >= this.width || y < 0 || y >= this.height)) {
       throw new errors.UserError(
           `Invalid move. (${x}, ${y}) out of board.`);
     }
-    if (this.board[y][x] !== Board.FIELD_BLANK) {
+    if (!pass && this.board[y][x] !== Board.FIELD_BLANK) {
       throw new errors.UserError(
           `Invalid move. There is already a stone at position (${x}, ${y}).`);
     }
@@ -222,6 +225,7 @@ export default class Board {
       }
     } else {
       if (pass) {
+        console.log(this.reverseCount);
         throw new errors.UserError(
             `Invalid pass. Can not pass when there is a possible position.`);
       } else {

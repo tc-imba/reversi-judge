@@ -4,7 +4,6 @@ import _ from 'lodash';
 
 import errors from './errors';
 import utils from './utils';
-import finder from '../../build/Release/forbidden-point-finder';
 
 const derives = [[0, 1], [1, 0], [1, 1], [1, -1]];
 
@@ -46,23 +45,33 @@ export default class Board {
   constructor(width, height, nInRow) {
     assert(width > 0);
     assert(height > 0);
-    assert(nInRow > 1);
+    // assert(nInRow > 1);
     utils.log('debug', {action: 'createBoard', width, height, nInRow});
     this.width = width;
     this.height = height;
-    this.nInRow = nInRow;
+    // this.nInRow = nInRow;
+    this.directions = [
+      {x: -1, y: -1},
+      {x: -1, y: 0},
+      {x: -1, y: 1},
+      {x: 0, y: -1},
+      {x: 0, y: 1},
+      {x: 1, y: -1},
+      {x: 1, y: 0},
+      {x: 1, y: 1},
+    ];
     this.clear();
   }
 
   clear() {
     this.board = _.map(new Array(this.height),
-      row => _.fill(new Array(this.width), Board.FIELD_BLANK));
+        row => _.fill(new Array(this.width), Board.FIELD_BLANK));
     this.order = _.map(new Array(this.height),
-      row => _.fill(new Array(this.width), 0));
+        row => _.fill(new Array(this.width), 0));
     this.currentOrder = 0;
     this.nextField = Board.FIELD_BLACK;
     this.state = Board.BOARD_STATE_GOING;
-    finder.clear();
+    this.lastPass = false;
   }
 
   clearFromFile(file) {
@@ -90,20 +99,18 @@ export default class Board {
       }
       this.board[y][x] = field;
       fieldStat[field]++;
-      const fieldStr = field === Board.FIELD_BLACK ? 'black' : 'white';
-      finder.addStone(x, y, fieldStr);
     });
     if (fieldStat[Board.FIELD_BLACK] === fieldStat[Board.FIELD_WHITE]) {
       this.nextField = Board.FIELD_BLACK;
     } else if (fieldStat[Board.FIELD_BLACK] === fieldStat[Board.FIELD_WHITE] +
-      1) {
+        1) {
       this.nextField = Board.FIELD_WHITE;
     } else {
       throw new errors.UserError(
-        `Invalid initial state, black = ${fieldStat[Board.FIELD_BLACK]}, white = ${fieldStat[Board.FIELD_WHITE]}.`);
+          `Invalid initial state, black = ${fieldStat[Board.FIELD_BLACK]}, white = ${fieldStat[Board.FIELD_WHITE]}.`);
     }
     utils.log('debug',
-      {action: 'clearBoard', board: this.board, nextField: this.nextField});
+        {action: 'clearBoard', board: this.board, nextField: this.nextField});
   }
 
   getCurrentPlaces() {
@@ -118,41 +125,124 @@ export default class Board {
     return places;
   }
 
-  place(x, y) {
+  reverse(x, y, dir, field, action = false) {
+    const oppField = Board.getOppositeField(field);
+    let flag = false;
+    let num = 0;
+    x += dir.x;
+    y += dir.y;
+    while (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+      if (this.board[y][x] === oppField) {
+        ++num;
+        if (action) {
+          this.board[y][x] = field;
+        }
+      } else if (this.board[y][x] === field && num > 0) {
+        flag = true;
+        break;
+      } else break;
+      x += dir.x;
+      y += dir.y;
+    }
+    if (!flag) num = 0;
+    return num;
+  }
+
+  calculateReversePoints(field) {
+    this.reverseCount = _.map(new Array(this.height),
+        row => _.fill(new Array(this.width), 0));
+    let count = 0;
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        let num = 0;
+        for (const i in this.directions) {
+          num += this.reverse(x, y, this.directions[i], field);
+        }
+        this.reverseCount[y][x] = num;
+        if (num > 0) {
+          ++count;
+        }
+      }
+    }
+    return count;
+  }
+
+  calculateResultState() {
+    let blackNum = 0;
+    let whiteNum = 0;
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        if (this.board[y][x] === Board.FIELD_BLACK) {
+          ++blackNum;
+        } else if (this.board[y][x] === Board.FIELD_WHITE) {
+          ++whiteNum;
+        }
+      }
+    }
+    if (blackNum === whiteNum) {
+      this.state = Board.BOARD_STATE_DRAW;
+    } else if (blackNum > whiteNum) {
+      this.state = Board.BOARD_STATE_WIN_BLACK;
+    } else {
+      this.state = Board.BOARD_STATE_WIN_WHITE;
+    }
+  }
+
+  place(x, y, pass = false) {
     assert(this.state === Board.BOARD_STATE_GOING);
 
     if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
       throw new errors.UserError(
-        `Invalid move. Movement position out of board.`);
+          `Invalid move. (${x}, ${y}) out of board.`);
     }
     if (this.board[y][x] !== Board.FIELD_BLANK) {
       throw new errors.UserError(
-        `Invalid move. There is already a stone at position (${x}, ${y}).`);
+          `Invalid move. There is already a stone at position (${x}, ${y}).`);
     }
 
+    // change the fields
     const field = this.nextField;
-    this.board[y][x] = field;
-    this.order[y][x] = ++this.currentOrder;
     this.nextField = Board.getOppositeField(field);
+    const move = {x, y, ended: false, pass: pass};
 
-    utils.log('debug', {action: 'place', position: [x, y], field});
-
-    const move = {x, y, ended: false};
-    //const [ state, winningStones ] = this.getCurrentState(x, y, field);
-
-    const fieldStr = field === Board.FIELD_BLACK ? 'black' : 'white';
-    const state = finder.addStone(x, y, fieldStr);
-
-    if (state === STATE_DRAW) {
-      move.ended = true;
-      this.state = Board.BOARD_STATE_DRAW;
-    } else if (state === STATE_BLACK_WIN) {
-      move.ended = true;
-      this.state = Board.BOARD_STATE_WIN_BLACK;
-    } else if (state === STATE_WHITE_WIN || state === STATE_FORBIDDEN) {
-      move.ended = true;
-      this.state = Board.BOARD_STATE_WIN_WHITE;
+    // calculate the possible reverse points
+    const possibleCount = this.calculateReversePoints(field);
+    if (possibleCount === 0) {
+      if (pass) {
+        if (this.lastPass) {
+          move.ended = true;
+          this.calculateResultState();
+        } else {
+          ++this.currentOrder;
+          utils.log('debug', {action: 'pass', field});
+        }
+      } else {
+        throw new errors.UserError(
+            `Invalid move. (${x}, ${y}) not able to reverse a single stone.`);
+      }
+    } else {
+      if (pass) {
+        throw new errors.UserError(
+            `Invalid pass. Can not pass when there is a possible position.`);
+      } else {
+        if (this.reverseCount[y][x] > 0) {
+          for (const i in this.directions) {
+            const num = this.reverse(x, y, this.directions[i], field);
+            if (num > 0) {
+              this.reverse(x, y, this.directions[i], field, true);
+            }
+          }
+          this.board[y][x] = field;
+          this.order[y][x] = ++this.currentOrder;
+          utils.log('debug', {action: 'place', position: [x, y], field, board: this.board});
+        } else {
+          throw new errors.UserError(
+              `Invalid move. (${x}, ${y}) not able to reverse a single stone.`);
+        }
+      }
     }
+
+    this.lastPass = pass;
 
     if (move.ended) {
       const info = {action: 'roundEnd', board: this.board};
@@ -164,36 +254,5 @@ export default class Board {
 
     return move;
   }
-
-  /*
-    getCurrentState(x, y, field) {
-      for (const [dx, dy] of derives) {
-        let count = 1;
-        let x0, y0;
-        let stones = [[x, y]];
-        for (const dir of [1, -1]) {
-          x0 = x + dir * dx;
-          y0 = y + dir * dy;
-          while (x0 >= 0 && x0 < this.width && y0 >= 0 && y0 < this.height && this.board[y0][x0] === field) {
-            count++;
-            stones.push([x0, y0]);
-            x0 += dir * dx;
-            y0 += dir * dy;
-          }
-        }
-        if (count >= this.nInRow) {
-          return [STATE_WIN, stones];
-        }
-      }
-      for (const row of this.board) {
-        for (const field of row) {
-          if (field === Board.FIELD_BLANK) {
-            return [STATE_GOING];
-          }
-        }
-      }
-      return [STATE_DRAW];
-    }
-  */
 
 }

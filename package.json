@@ -4,8 +4,9 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build": "node-gyp configure build && gulp clean && gulp js",
-    "start": "node .dist/bootstrap.js"
+    "build": "gulp clean && gulp js",
+    "start": "node .dist/bootstrap.js",
+    "test": "node .dist/test.js"
   },
   "license": "MIT",
   "dependencies": {

@@ -197,15 +197,24 @@ async function main() {
         const resp = await brain.waitForOneResponse(brain.config.moveTimeout, () => {
           if (lastMove === null) {
             brain.writeInstruction('BEGIN');
+          } else if (lastMove.pass) {
+            brain.writeInstruction('PASS');
           } else {
             brain.writeInstruction(`TURN ${lastMove.x} ${lastMove.y}`);
           }
         });
-        const m = resp.match(/^(\d+) (\d+)$/);
-        if (!m) {
-          throw new errors.UserError(`Invalid response. Expect a movement like "[X] [Y]".`);
+        let move;
+        if (resp === 'PASS') {
+          move = board.place(0, 0, true);
+        } else {
+          const m = resp.match(/^([a-z]) (\d+)$/);
+          if (!m || m[2] < 1) {
+            throw new errors.UserError(`Invalid response. Expect a movement like "[X] [Y]" or PASS.`);
+          }
+          const col = m[1].charCodeAt(0) - 'a'.charCodeAt(0);
+          const row = m[2] - 1;
+          move = board.place(col, row, false);
         }
-        const move = board.place(parseInt(m[1]), parseInt(m[2]));
         lastMove = move;
         currentBrainId = 1 - currentBrainId;
       });
